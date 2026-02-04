@@ -1,10 +1,11 @@
-# Safetec Water Home Assistant Custom Component (Version 1.2)
+# Safetec Water Home Assistant Custom Component (Version 1.3)
 
-## Summary (Version 1.2)
+## Summary (Version 1.3)
 
-- Polls Safetec Water device endpoints every minute to expose volume, pressure, temperature, voltages, and diagnostics in Home Assistant.
-- Supports UI configuration via config flow (host/port) in addition to YAML configuration.
-- Reports total volume as `TOTAL_INCREASING` for consumption statistics and InfluxDB storage.
+- Rebuilt integration from scratch with clean sensor setup and debug logging.
+- Polls Safetec Water device endpoints every minute to expose volume, pressure, temperature, voltages, and diagnostics.
+- Supports UI configuration via config flow (host/port) and YAML configuration.
+- Reports total volume as `TOTAL_INCREASING` for Home Assistant statistics (hour/day/week/month) and InfluxDB storage.
 - Converts raw device units to human-friendly values (bar, °C, V) and surfaces firmware/serial as diagnostics.
 
 This repository provides a Home Assistant custom component that polls a Safetec water device and exposes sensors for:
@@ -25,6 +26,7 @@ This repository provides a Home Assistant custom component that polls a Safetec 
    custom_components/
      safetec_water/
        __init__.py
+       config_flow.py
        const.py
        manifest.json
        sensor.py
@@ -43,7 +45,15 @@ sensor:
     port: 5333
 ```
 
-### InfluxDB (optional, uses existing HA configuration)
+## UI Configuration (Config Flow)
+
+You can also add the integration from the Home Assistant UI:
+
+1. Go to **Settings → Devices & Services → Add Integration**.
+2. Search for **Safetec Water**.
+3. Enter the device host and port.
+
+## InfluxDB (optional, uses existing HA configuration)
 
 If you already have InfluxDB configured, Home Assistant will store these sensors in that database automatically. Example:
 

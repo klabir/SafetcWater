@@ -15,17 +15,21 @@ class SafetecWaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input: dict | None = None):
+    async def async_step_user(self, user_input: dict[str, str] | None = None):
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        if user_input is None:
+            return self._show_form()
 
-        if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+        await self.async_set_unique_id(user_input[CONF_HOST])
+        self._abort_if_unique_id_configured()
 
+        return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+
+    def _show_form(self):
         schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
             }
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+        return self.async_show_form(step_id="user", data_schema=schema)

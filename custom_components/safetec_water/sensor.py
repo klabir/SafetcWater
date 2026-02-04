@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,10 +38,9 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN, INTEGRATION_VERSION
 
 _LOGGER = logging.getLogger(__name__)
-INTEGRATION_VERSION = "1.1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -117,16 +116,13 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: dict[str, Any] | None = None,
 ) -> None:
-    """Set up Safetec Water sensors."""
-
-    host = config[CONF_HOST]
-    port = config[CONF_PORT]
+    """Set up Safetec Water sensors from YAML."""
     await _async_setup_entities(
         hass,
         async_add_entities,
-        host=host,
-        port=port,
-        raise_not_ready=PlatformNotReady,
+        host=config[CONF_HOST],
+        port=config[CONF_PORT],
+        raise_not_ready=ConfigEntryNotReady,
     )
 
 
@@ -154,7 +150,7 @@ async def _async_setup_entities(
     raise_not_ready: type[Exception],
 ) -> None:
     _LOGGER.debug(
-        "Setting up Safetec Water platform v%s for host=%s port=%s",
+        "Setting up Safetec Water v%s for host=%s port=%s",
         INTEGRATION_VERSION,
         host,
         port,

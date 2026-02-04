@@ -1,9 +1,10 @@
 {
   "domain": "safetec_water",
   "name": "Safetec Water",
-  "version": "0.1.0",
-  "documentation": "https://example.com/safetec_water",
+  "codeowners": [],
   "config_flow": true,
+  "documentation": "",
+  "iot_class": "local_polling",
   "requirements": [],
-  "codeowners": []
+  "version": "1.3.0"
 }
