@@ -28,7 +28,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -136,6 +136,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Safetec Water sensors from a config entry."""
+    if CONF_HOST not in entry.data:
+        raise ConfigEntryError("Missing required host in Safetec Water config entry.")
     await _async_setup_entities(
         hass,
         async_add_entities,
