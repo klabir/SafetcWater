@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from collections import deque
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable
@@ -43,33 +42,26 @@ from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, INTEGRATION_VERS
 
 _LOGGER = logging.getLogger(__name__)
 
-class VolumeRateTracker:
-    """Track volume deltas to calculate usage per hour."""
+class VolumePerHourTracker:
+    """Track volume delta since the top of the current hour."""
 
     def __init__(self) -> None:
-        self._samples: deque[tuple[datetime, float]] = deque()
+        self._hour_start: datetime | None = None
+        self._hour_start_value: float | None = None
 
-    def add(self, value: float | None) -> None:
+    def update(self, value: float | None) -> float | None:
         if value is None:
-            return
+            return None
         now = dt_util.utcnow()
-        self._samples.append((now, value))
-        cutoff = now - timedelta(hours=1)
-        while self._samples and self._samples[0][0] < cutoff:
-            self._samples.popleft()
-
-    def liters_per_hour(self) -> float | None:
-        if len(self._samples) < 2:
-            return None
-        oldest_time, oldest_value = self._samples[0]
-        newest_time, newest_value = self._samples[-1]
-        elapsed = (newest_time - oldest_time).total_seconds()
-        if elapsed <= 0:
-            return None
-        delta = newest_value - oldest_value
+        current_hour = now.replace(minute=0, second=0, microsecond=0)
+        if self._hour_start != current_hour or self._hour_start_value is None:
+            self._hour_start = current_hour
+            self._hour_start_value = value
+            return 0.0
+        delta = value - self._hour_start_value
         if delta < 0:
             return None
-        return round((delta / elapsed) * 3600, 3)
+        return round(delta, 3)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -185,12 +177,11 @@ async def _async_setup_entities(
     session = aiohttp_client.async_get_clientsession(hass)
     client = SafetecWaterClient(session, host, port)
 
-    volume_tracker = VolumeRateTracker()
+    volume_tracker = VolumePerHourTracker()
 
     async def _update_main() -> dict[str, Any]:
         data = await client.async_fetch_main()
-        volume_tracker.add(data.get("volume"))
-        data["volume_per_hour"] = volume_tracker.liters_per_hour()
+        data["volume_per_hour"] = volume_tracker.update(data.get("volume"))
         return data
 
     main_coordinator = DataUpdateCoordinator(
