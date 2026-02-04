@@ -50,8 +50,17 @@ class SafetecWaterOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = self._config_entry.options
+        data = self._config_entry.data
         schema = vol.Schema(
             {
+                vol.Optional(
+                    CONF_HOST,
+                    default=options.get(CONF_HOST, data.get(CONF_HOST, "")),
+                ): str,
+                vol.Optional(
+                    CONF_PORT,
+                    default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT)),
+                ): int,
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),

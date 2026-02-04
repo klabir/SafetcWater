@@ -22,14 +22,14 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Safetec Water from a config entry."""
-    host = entry.data.get(CONF_HOST)
+    host = entry.options.get(CONF_HOST, entry.data.get(CONF_HOST))
     if not host:
         _LOGGER.error("Safetec Water config entry missing host; aborting setup")
         return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         CONF_HOST: host,
-        CONF_PORT: entry.data.get(CONF_PORT, DEFAULT_PORT),
+        CONF_PORT: entry.options.get(CONF_PORT, entry.data.get(CONF_PORT, DEFAULT_PORT)),
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -29,18 +29,6 @@ This repository provides a Home Assistant custom component that polls a Safetec 
 
 2. Restart Home Assistant.
 
-## Configuration (`configuration.yaml`)
-
-Add the Safetec Water platform configuration and point it at your device IP address:
-
-```yaml
-sensor:
-  - platform: safetec_water
-    host: 192.168.1.94
-    port: 5333
-    scan_interval: 15
-```
-
 ## UI Configuration (Config Flow)
 
 You can also add the integration from the Home Assistant UI:
@@ -48,7 +36,10 @@ You can also add the integration from the Home Assistant UI:
 1. Go to **Settings → Devices & Services → Add Integration**.
 2. Search for **Safetec Water**.
 3. Enter the device host and port.
-4. (Optional) Open the integration options to set the polling interval in seconds.
+4. (Optional) Open the integration options to change the host, port, or polling interval in seconds.
+   - Minimum supported value: **5 seconds**.
+   
+This integration is configured **only** through the UI (no `configuration.yaml` settings).
 
 ## InfluxDB (optional, uses existing HA configuration)
 
@@ -70,3 +61,4 @@ influxdb:
 - Temperature is `get/cel` divided by 10 (°C).
 - Battery and DC voltage are `get/bat` and `get/net` divided by 10 (V).
 - Firmware version, serial number, conductivity, WiFi RSSI, IP address, default gateway, and valve status are exposed as attributes on each sensor and added to the device registry.
+- UI setup creates a config entry in Home Assistant storage and **does not** auto-write `configuration.yaml`.

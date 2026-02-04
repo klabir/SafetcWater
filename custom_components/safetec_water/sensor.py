@@ -11,17 +11,13 @@ from typing import Any, Callable
 
 import aiohttp
 import async_timeout
-import voluptuous as vol
-
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONF_HOST,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     UnitOfElectricPotential,
@@ -32,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
@@ -45,18 +41,6 @@ from homeassistant.util import dt as dt_util
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, INTEGRATION_VERSION
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            vol.Coerce(int), vol.Range(min=5)
-        ),
-    }
-)
-
-
 
 class VolumeRateTracker:
     """Track volume deltas to calculate usage per hour."""
@@ -164,23 +148,6 @@ class SafetecWaterClient:
         return {"pressure": _coerce_number(pressure)}
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
-) -> None:
-    """Set up Safetec Water sensors from YAML."""
-    await _async_setup_entities(
-        hass,
-        async_add_entities,
-        host=config[CONF_HOST],
-        port=config[CONF_PORT],
-        scan_interval=timedelta(seconds=config[CONF_SCAN_INTERVAL]),
-        raise_not_ready=ConfigEntryNotReady,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Any,
@@ -190,8 +157,8 @@ async def async_setup_entry(
     await _async_setup_entities(
         hass,
         async_add_entities,
-        host=entry.data[CONF_HOST],
-        port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        host=entry.options.get(CONF_HOST, entry.data[CONF_HOST]),
+        port=entry.options.get(CONF_PORT, entry.data.get(CONF_PORT, DEFAULT_PORT)),
         scan_interval=timedelta(
             seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         ),
