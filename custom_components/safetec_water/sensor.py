@@ -41,6 +41,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+INTEGRATION_VERSION = "1.1"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -121,7 +122,10 @@ async def async_setup_platform(
     host = config[CONF_HOST]
     port = config[CONF_PORT]
     _LOGGER.debug(
-        "Setting up Safetec Water platform for host=%s port=%s", host, port
+        "Setting up Safetec Water platform v%s for host=%s port=%s",
+        INTEGRATION_VERSION,
+        host,
+        port,
     )
     session = aiohttp_client.async_get_clientsession(hass)
     client = SafetecWaterClient(session, host, port)
@@ -158,8 +162,6 @@ async def async_setup_platform(
         main_coordinator.data,
         pressure_coordinator.data,
     )
-
-        raise PlatformNotReady from err
 
     device_info = _device_info(host, port, main_coordinator.data)
 
