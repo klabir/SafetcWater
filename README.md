@@ -1,4 +1,4 @@
-# Safetec Water Home Assistant Custom Component (Version 1.4)
+# Safetec Water Home Assistant Custom Component (Version 1.5)
 
 This repository provides a Home Assistant custom component that polls a Safetec water device and exposes sensors for:
 
@@ -28,6 +28,12 @@ This repository provides a Home Assistant custom component that polls a Safetec 
    ```
 
 2. Restart Home Assistant.
+
+## HACS Installation (recommended)
+
+1. In HACS, add this repository as a custom repository (Integration).
+2. Install **Safetec Water** from HACS.
+3. Restart Home Assistant.
 
 ## UI Configuration (Config Flow)
 
