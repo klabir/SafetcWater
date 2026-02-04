@@ -1,8 +1,9 @@
-# Safetec Water Home Assistant Custom Component (Version 1.1)
+# Safetec Water Home Assistant Custom Component (Version 1.2)
 
-## Summary (Version 1.1)
+## Summary (Version 1.2)
 
 - Polls Safetec Water device endpoints every minute to expose volume, pressure, temperature, voltages, and diagnostics in Home Assistant.
+- Supports UI configuration via config flow (host/port) in addition to YAML configuration.
 - Reports total volume as `TOTAL_INCREASING` for consumption statistics and InfluxDB storage.
 - Converts raw device units to human-friendly values (bar, °C, V) and surfaces firmware/serial as diagnostics.
 

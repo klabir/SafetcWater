@@ -3,6 +3,7 @@
   "name": "Safetec Water",
   "version": "0.1.0",
   "documentation": "https://example.com/safetec_water",
+  "config_flow": true,
   "requirements": [],
   "codeowners": []
 }
