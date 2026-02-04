@@ -1,22 +1,16 @@
-# Safetec Water Home Assistant Custom Component (Version 1.3)
-
-## Summary (Version 1.3)
-
-- Rebuilt integration from scratch with clean sensor setup and debug logging.
-- Polls Safetec Water device endpoints every minute to expose volume, pressure, temperature, voltages, and diagnostics.
-- Supports UI configuration via config flow (host/port) and YAML configuration.
-- Reports total volume as `TOTAL_INCREASING` for Home Assistant statistics (hour/day/week/month) and InfluxDB storage.
-- Converts raw device units to human-friendly values (bar, °C, V) and surfaces firmware/serial as diagnostics.
+# Safetec Water Home Assistant Custom Component (Version 1.4)
 
 This repository provides a Home Assistant custom component that polls a Safetec water device and exposes sensors for:
 
 - Total water volume (liters, `TOTAL_INCREASING` for statistics/consumption).
+- Last tapped volume (liters).
+- Single consumption volume (liters, converted from ml).
 - Water pressure (bar, updated every minute).
+- Water flow (liters per hour).
 - Water temperature (°C).
 - Battery voltage (V).
 - DC/adapter voltage (V).
-- Firmware version (diagnostic).
-- Serial number (diagnostic).
+- Firmware version, serial number, conductivity, WiFi RSSI, IP address, default gateway, and valve status are exposed as attributes on each sensor.
 
 ## Installation
 
@@ -72,4 +66,4 @@ influxdb:
 - Pressure is stored as bar with three decimal places.
 - Temperature is `get/cel` divided by 10 (°C).
 - Battery and DC voltage are `get/bat` and `get/net` divided by 10 (V).
-- Firmware version and serial number are exposed as diagnostic sensors and added to the device registry.
+- Firmware version, serial number, conductivity, WiFi RSSI, IP address, default gateway, and valve status are exposed as attributes on each sensor and added to the device registry.
