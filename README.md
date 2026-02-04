@@ -38,6 +38,7 @@ sensor:
   - platform: safetec_water
     host: 192.168.1.94
     port: 5333
+    scan_interval: 15
 ```
 
 ## UI Configuration (Config Flow)
@@ -47,6 +48,7 @@ You can also add the integration from the Home Assistant UI:
 1. Go to **Settings → Devices & Services → Add Integration**.
 2. Search for **Safetec Water**.
 3. Enter the device host and port.
+4. (Optional) Open the integration options to set the polling interval in seconds.
 
 ## InfluxDB (optional, uses existing HA configuration)
 

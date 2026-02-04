@@ -5,9 +5,9 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 
 class SafetecWaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -33,3 +33,29 @@ class SafetecWaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema)
+
+    @staticmethod
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+        return SafetecWaterOptionsFlow(config_entry)
+
+
+class SafetecWaterOptionsFlow(config_entries.OptionsFlow):
+    """Handle options for Safetec Water."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        self._config_entry = config_entry
+
+    async def async_step_init(self, user_input: dict[str, int] | None = None):
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = self._config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+                ): vol.All(vol.Coerce(int), vol.Range(min=5)),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

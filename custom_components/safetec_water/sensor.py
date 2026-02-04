@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     UnitOfElectricPotential,
     UnitOfPressure,
     UnitOfTemperature,
@@ -41,7 +42,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_PORT, DOMAIN, INTEGRATION_VERSION
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, INTEGRATION_VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,11 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            vol.Coerce(int), vol.Range(min=5)
+        ),
     }
 )
 
-MAIN_SCAN_INTERVAL = timedelta(seconds=15)
-PRESSURE_SCAN_INTERVAL = timedelta(seconds=15)
 
 
 class VolumeRateTracker:
@@ -174,6 +176,7 @@ async def async_setup_platform(
         async_add_entities,
         host=config[CONF_HOST],
         port=config[CONF_PORT],
+        scan_interval=timedelta(seconds=config[CONF_SCAN_INTERVAL]),
         raise_not_ready=ConfigEntryNotReady,
     )
 
@@ -189,6 +192,9 @@ async def async_setup_entry(
         async_add_entities,
         host=entry.data[CONF_HOST],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
+        scan_interval=timedelta(
+            seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        ),
         raise_not_ready=ConfigEntryNotReady,
     )
 
@@ -199,6 +205,7 @@ async def _async_setup_entities(
     *,
     host: str,
     port: int,
+    scan_interval: timedelta,
     raise_not_ready: type[Exception],
 ) -> None:
     _LOGGER.debug(
@@ -223,14 +230,14 @@ async def _async_setup_entities(
         _LOGGER,
         name="Safetec Water",
         update_method=_update_main,
-        update_interval=MAIN_SCAN_INTERVAL,
+        update_interval=scan_interval,
     )
     pressure_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="Safetec Water Pressure",
         update_method=client.async_fetch_pressure,
-        update_interval=PRESSURE_SCAN_INTERVAL,
+        update_interval=scan_interval,
     )
 
     try:
