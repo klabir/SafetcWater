@@ -120,6 +120,9 @@ async def async_setup_platform(
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    _LOGGER.debug(
+        "Setting up Safetec Water platform for host=%s port=%s", host, port
+    )
     session = aiohttp_client.async_get_clientsession(hass)
     client = SafetecWaterClient(session, host, port)
 
@@ -142,6 +145,20 @@ async def async_setup_platform(
         await main_coordinator.async_config_entry_first_refresh()
         await pressure_coordinator.async_config_entry_first_refresh()
     except UpdateFailed as err:
+        _LOGGER.error(
+            "Initial Safetec Water refresh failed for host=%s port=%s: %s",
+            host,
+            port,
+            err,
+        )
+        raise PlatformNotReady from err
+
+    _LOGGER.debug(
+        "Safetec Water initial data: main=%s pressure=%s",
+        main_coordinator.data,
+        pressure_coordinator.data,
+    )
+
         raise PlatformNotReady from err
 
     device_info = _device_info(host, port, main_coordinator.data)
@@ -229,6 +246,12 @@ async def async_setup_platform(
 
     entities: list[SensorEntity] = []
     for coordinator, description, data_key in descriptions:
+        _LOGGER.debug(
+            "Adding Safetec Water sensor: key=%s name=%s coordinator=%s",
+            data_key,
+            description.name,
+            coordinator.name,
+        )
         entities.append(
             SafetecWaterSensor(
                 coordinator=coordinator,
@@ -239,6 +262,7 @@ async def async_setup_platform(
         )
 
     async_add_entities(entities)
+    _LOGGER.debug("Safetec Water setup complete. Added %d sensors.", len(entities))
 
 
 class SafetecWaterSensor(CoordinatorEntity[DataUpdateCoordinator], SensorEntity):
