@@ -18,6 +18,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONF_HOST,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     UnitOfElectricPotential,
