@@ -159,6 +159,8 @@ async def async_setup_platform(
         pressure_coordinator.data,
     )
 
+        raise PlatformNotReady from err
+
     device_info = _device_info(host, port, main_coordinator.data)
 
     descriptions: list[tuple[DataUpdateCoordinator, SafetecWaterSensorDescription, str]] = [
