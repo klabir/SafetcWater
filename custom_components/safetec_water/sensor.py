@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from collections import deque
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Callable
 
@@ -38,6 +39,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
     UpdateFailed,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_PORT, DOMAIN, INTEGRATION_VERSION
 
@@ -50,8 +52,37 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-MAIN_SCAN_INTERVAL = timedelta(minutes=1)
-PRESSURE_SCAN_INTERVAL = timedelta(minutes=1)
+MAIN_SCAN_INTERVAL = timedelta(seconds=15)
+PRESSURE_SCAN_INTERVAL = timedelta(seconds=15)
+
+
+class VolumeRateTracker:
+    """Track volume deltas to calculate usage per hour."""
+
+    def __init__(self) -> None:
+        self._samples: deque[tuple[datetime, float]] = deque()
+
+    def add(self, value: float | None) -> None:
+        if value is None:
+            return
+        now = dt_util.utcnow()
+        self._samples.append((now, value))
+        cutoff = now - timedelta(hours=1)
+        while self._samples and self._samples[0][0] < cutoff:
+            self._samples.popleft()
+
+    def liters_per_hour(self) -> float | None:
+        if len(self._samples) < 2:
+            return None
+        oldest_time, oldest_value = self._samples[0]
+        newest_time, newest_value = self._samples[-1]
+        elapsed = (newest_time - oldest_time).total_seconds()
+        if elapsed <= 0:
+            return None
+        delta = newest_value - oldest_value
+        if delta < 0:
+            return None
+        return round((delta / elapsed) * 3600, 3)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -179,11 +210,19 @@ async def _async_setup_entities(
     session = aiohttp_client.async_get_clientsession(hass)
     client = SafetecWaterClient(session, host, port)
 
+    volume_tracker = VolumeRateTracker()
+
+    async def _update_main() -> dict[str, Any]:
+        data = await client.async_fetch_main()
+        volume_tracker.add(data.get("volume"))
+        data["volume_per_hour"] = volume_tracker.liters_per_hour()
+        return data
+
     main_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
         name="Safetec Water",
-        update_method=client.async_fetch_main,
+        update_method=_update_main,
         update_interval=MAIN_SCAN_INTERVAL,
     )
     pressure_coordinator = DataUpdateCoordinator(
@@ -225,6 +264,16 @@ async def _async_setup_entities(
                 state_class=SensorStateClass.TOTAL_INCREASING,
             ),
             "volume",
+        ),
+        (
+            main_coordinator,
+            SafetecWaterSensorDescription(
+                key="volume_per_hour",
+                name="Safetec Water Consumption Per Hour",
+                native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            "volume_per_hour",
         ),
         (
             main_coordinator,

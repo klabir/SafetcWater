@@ -3,9 +3,10 @@
 This repository provides a Home Assistant custom component that polls a Safetec water device and exposes sensors for:
 
 - Total water volume (liters, `TOTAL_INCREASING` for statistics/consumption).
+- Water consumption per hour (liters per hour, derived from total volume).
 - Last tapped volume (liters).
 - Single consumption volume (liters, converted from ml).
-- Water pressure (bar, updated every minute).
+- Water pressure (bar, updated every 15 seconds).
 - Water flow (liters per hour).
 - Water temperature (°C).
 - Battery voltage (V).
