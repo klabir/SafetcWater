@@ -9,7 +9,6 @@ import logging
 from typing import Any, Callable
 
 import aiohttp
-import async_timeout
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -82,7 +81,7 @@ class SafetecWaterClient:
     async def _async_get_json(self, path: str) -> dict[str, Any] | Any:
         url = f"{self._base_url}/{path}"
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 async with self._session.get(url) as response:
                     response.raise_for_status()
                     return await response.json()
@@ -92,7 +91,7 @@ class SafetecWaterClient:
     async def _async_fire_and_forget(self, path: str) -> None:
         url = f"{self._base_url}/{path}"
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 async with self._session.get(url) as response:
                     response.raise_for_status()
         except (aiohttp.ClientError, asyncio.TimeoutError) as err:
