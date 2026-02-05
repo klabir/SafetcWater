@@ -237,6 +237,7 @@ async def _async_setup_entities(
                 key="volume_per_hour",
                 name="Safetec Water Consumption Per Hour",
                 native_unit_of_measurement=UnitOfVolume.LITERS,
+                device_class=SensorDeviceClass.WATER,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
             "volume_per_hour",
