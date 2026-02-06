@@ -93,7 +93,6 @@ SENSOR_DETAILS = {
         "name": "Last tapped volume",
         "endpoint": "getLTV",
         "unit": "L",
-        "device_class": SensorDeviceClass.WATER,
         "state_class": SensorStateClass.MEASUREMENT,
     },
     "no_pulse_time": {
@@ -105,7 +104,6 @@ SENSOR_DETAILS = {
         "name": "Current water consumption",
         "endpoint": "getAVO",
         "unit": "L",
-        "device_class": SensorDeviceClass.WATER,
         "state_class": SensorStateClass.MEASUREMENT,
         "entity_category": EntityCategory.DIAGNOSTIC,
         "scale": 0.001,
