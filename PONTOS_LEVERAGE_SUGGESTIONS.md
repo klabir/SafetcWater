@@ -1,11 +1,11 @@
-# hass-pontos (SYR SafeTech+) leverage suggestions for Safetec Water
+# hass-safetec (SYR SafeTech+) leverage suggestions for Safetec Water
 
-This note reflects a review of `hass-pontos-master.zip` and now focuses only on **SYR SafeTech+** patterns that can be reused by `safetec_water`.
+This note reflects a review of `hass-safetec-master.zip` and now focuses only on **SYR SafeTech+** patterns that can be reused by `safetec_water`.
 
 ## What to leverage first (high impact)
 
 1. **Use SafeTech+ bulk endpoint (`/trio/get/all`) first**
-   - In `hass_pontos` SafeTech+ config, `URL_ALL_DATA` uses one bulk call (`http://{ip}:5333/trio/get/all`).
+   - In `hass_safetec` SafeTech+ config, `URL_ALL_DATA` uses one bulk call (`http://{ip}:5333/trio/get/all`).
    - For Safetec Water, prefer bulk-read + parser, then fallback to per-endpoint calls only when needed.
 
 2. **Adopt config-driven sensor mapping from SafeTech+**
@@ -13,11 +13,11 @@ This note reflects a review of `hass-pontos-master.zip` and now focuses only on 
    - We should move hardcoded endpoint handling in `sensor.py` to a mapping table to simplify maintenance and extendability.
 
 3. **Reuse SafeTech+ retry/backoff strategy**
-   - `hass_pontos` `fetch_data` retries failed requests with bounded attempts and delay.
+   - `hass_safetec` `fetch_data` retries failed requests with bounded attempts and delay.
    - Add bounded retry/backoff for Safetec fetches to improve resilience on temporary network/device hiccups.
 
 4. **Apply options reliably without manual restart**
-   - `hass_pontos` updates fetch configuration (IP/fetch interval) through options flow and coordinator behavior.
+   - `hass_safetec` updates fetch configuration (IP/fetch interval) through options flow and coordinator behavior.
    - Safetec Water should use robust options-change reload behavior for host/port/scan interval changes.
 
 5. **Expand SafeTech+ code decoding centrally**
@@ -45,11 +45,11 @@ This note reflects a review of `hass-pontos-master.zip` and now focuses only on 
    - This pattern can simplify firmware/serial/network/profile-related attributes in Safetec Water.
 
 10. **Fixture-based testing from real SafeTech+ payloads**
-   - `hass-pontos` includes test payload JSON files and a local serving helper.
+   - `hass-safetec` includes test payload JSON files and a local serving helper.
    - Add SafeTech+-based fixtures for parser/conversion/hourly-consumption tests to prevent regressions.
 
-11. **CI quality gates used by hass-pontos**
-   - `hass-pontos` includes validation/hassfest/version workflows.
+11. **CI quality gates used by hass-safetec**
+   - `hass-safetec` includes validation/hassfest/version workflows.
    - Mirror these checks for better HACS reliability.
 
 
@@ -61,7 +61,7 @@ This note reflects a review of `hass-pontos-master.zip` and now focuses only on 
 
 ## Caution: what to adapt (not copy blindly)
 
-- `hass_pontos` is multi-device and multi-platform (sensor/button/valve/select/time/switch/profile).
+- `hass_safetec` is multi-device and multi-platform (sensor/button/valve/select/time/switch/profile).
   - Safetec Water should stay focused on required scope unless control entities are intentionally added.
 - Keep Home Assistant-native config-entry reload semantics as source of truth.
 

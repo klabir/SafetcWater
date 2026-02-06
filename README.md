@@ -1,10 +1,10 @@
-# hass-pontos
+# hass-safetec
 
-[![GitHub Release](https://img.shields.io/github/release/sangvikh/hass-pontos.svg?style=flat)](https://github.com/sangvikh/hass-pontos/releases)
-[![hassfest](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-pontos/hassfest.yaml?branch=master&label=hassfest)](https://github.com/sangvikh/hass-pontos/actions/workflows/hassfest.yaml)
-[![HACS](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-pontos/validate.yaml?branch=master&label=HACS)](https://github.com/sangvikh/hass-pontos/actions/workflows/validate.yaml)
+[![GitHub Release](https://img.shields.io/github/release/sangvikh/hass-safetec.svg?style=flat)](https://github.com/sangvikh/hass-safetec/releases)
+[![hassfest](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-safetec/hassfest.yaml?branch=master&label=hassfest)](https://github.com/sangvikh/hass-safetec/actions/workflows/hassfest.yaml)
+[![HACS](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-safetec/validate.yaml?branch=master&label=HACS)](https://github.com/sangvikh/hass-safetec/actions/workflows/validate.yaml)
 
-HACS integration for Hansgrohe Pontos and SYR water meters
+HACS integration for Safetec and SYR water meters
 
 ## Features
 
@@ -14,7 +14,7 @@ HACS integration for Hansgrohe Pontos and SYR water meters
 
 ## Supported devices
 
-* Hansgrohe Pontos
+* Safetec
 * SYR Trio
 * SYR SafeTech+
 * SYR NeoSoft
@@ -26,13 +26,13 @@ HACS integration for Hansgrohe Pontos and SYR water meters
 ### HACS
 
 1. Install [HACS](https://hacs.xyz/docs/configuration/basic/) if needed.
-2. In HACS, search for and install the "Hansgrohe Pontos" integration.
+2. In HACS, search for and install the "Safetec" integration.
 3. Restart Home Assistant.
 4. Add the integration via Home Assistant's Integrations page and follow the configuration steps.
 
 ### Manual installation
 
 1. Download or clone this repository.
-2. Copy `custom_components/hass_pontos` to your Home Assistant `custom_components` directory.
+2. Copy `custom_components/hass_safetec` to your Home Assistant `custom_components` directory.
 3. Restart Home Assistant.
 4. Add the integration via Home Assistant's Integrations page and follow the configuration steps.
