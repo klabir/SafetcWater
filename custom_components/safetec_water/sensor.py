@@ -26,7 +26,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -154,7 +153,6 @@ async def async_setup_entry(
         scan_interval=timedelta(
             seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         ),
-        raise_not_ready=ConfigEntryNotReady,
     )
 
 
@@ -165,7 +163,6 @@ async def _async_setup_entities(
     host: str,
     port: int,
     scan_interval: timedelta,
-    raise_not_ready: type[Exception],
 ) -> None:
     _LOGGER.debug(
         "Setting up Safetec Water v%s for host=%s port=%s",
@@ -208,7 +205,7 @@ async def _async_setup_entities(
             port,
             err,
         )
-        raise raise_not_ready from err
+        return
 
     _LOGGER.debug(
         "Safetec Water initial data: main=%s pressure=%s",

@@ -6,7 +6,7 @@ This repository provides a Home Assistant custom component that polls a Safetec 
 - Water consumption per hour (liters, derived from the total volume since the top of the current hour).
 - Last tapped volume (liters).
 - Single consumption volume (liters, converted from ml).
-- Water pressure (bar, updated every 15 seconds).
+- Water pressure (bar, updated every configured scan interval; default 15 seconds).
 - Water flow (liters per hour).
 - Water temperature (°C).
 - Battery voltage (V).
@@ -63,6 +63,7 @@ influxdb:
 ## Notes
 
 - Total volume is reported as `TOTAL_INCREASING`, so Home Assistant can calculate usage per hour/day/week/month using statistics.
+- All device API calls (main + pressure endpoints) use the same configurable scan interval from integration options (default: 15 seconds, minimum: 5 seconds).
 - The per-hour consumption sensor reports the delta from the total volume at the start of the current hour and resets to zero on the hour.
 - Pressure is stored as bar with three decimal places.
 - Temperature is `get/cel` divided by 10 (°C).
