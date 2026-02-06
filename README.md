@@ -1,75 +1,38 @@
-# Safetec Water Home Assistant Custom Component (Version 1.5)
+# hass-pontos
 
-This repository provides a Home Assistant custom component that polls a Safetec water device and exposes sensors for:
+[![GitHub Release](https://img.shields.io/github/release/sangvikh/hass-pontos.svg?style=flat)](https://github.com/sangvikh/hass-pontos/releases)
+[![hassfest](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-pontos/hassfest.yaml?branch=master&label=hassfest)](https://github.com/sangvikh/hass-pontos/actions/workflows/hassfest.yaml)
+[![HACS](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-pontos/validate.yaml?branch=master&label=HACS)](https://github.com/sangvikh/hass-pontos/actions/workflows/validate.yaml)
 
-- Total water volume (liters, `TOTAL_INCREASING` for statistics/consumption).
-- Water consumption per hour (liters, derived from the total volume since the top of the current hour).
-- Last tapped volume (liters).
-- Single consumption volume (liters, converted from ml).
-- Water pressure (bar, updated every configured scan interval; default 15 seconds).
-- Water flow (liters per hour).
-- Water temperature (°C).
-- Water hardness (°dH, derived from conductivity).
-- WiFi state.
-- Battery voltage (V).
-- DC/adapter voltage (V).
-- Firmware version, serial number, conductivity, WiFi RSSI, IP address, default gateway, and valve status are exposed as attributes on each sensor.
+HACS integration for Hansgrohe Pontos and SYR water meters
+
+## Features
+
+* Adds sensors for water consumption, water pressure, water temperature +++
+* Monitors NeoSoft-specific values such as salt level and regeneration state
+* Opening/Closing of water valve
+
+## Supported devices
+
+* Hansgrohe Pontos
+* SYR Trio
+* SYR SafeTech+
+* SYR NeoSoft
 
 ## Installation
 
-1. Copy the custom component into your Home Assistant `custom_components` directory:
+**Recommended:** Install via HACS
 
-   ```bash
-   custom_components/
-     safetec_water/
-       __init__.py
-       config_flow.py
-       const.py
-       manifest.json
-       sensor.py
-   ```
+### HACS
 
-2. Restart Home Assistant.
-
-## HACS Installation (recommended)
-
-1. In HACS, add this repository as a custom repository (Integration).
-2. Install **Safetec Water** from HACS.
+1. Install [HACS](https://hacs.xyz/docs/configuration/basic/) if needed.
+2. In HACS, search for and install the "Hansgrohe Pontos" integration.
 3. Restart Home Assistant.
+4. Add the integration via Home Assistant's Integrations page and follow the configuration steps.
 
-## UI Configuration (Config Flow)
+### Manual installation
 
-You can also add the integration from the Home Assistant UI:
-
-1. Go to **Settings → Devices & Services → Add Integration**.
-2. Search for **Safetec Water**.
-3. Enter the device host and port.
-4. (Optional) Open the integration options to change the host, port, or polling interval in seconds.
-   - Minimum supported value: **5 seconds**.
-   
-This integration is configured **only** through the UI (no `configuration.yaml` settings).
-
-## InfluxDB (optional, uses existing HA configuration)
-
-If you already have InfluxDB configured, Home Assistant will store these sensors in that database automatically. Example:
-
-```yaml
-influxdb:
-  host: 0.0.0.0
-  port: 8086
-  database: homeassistant_influx_db
-  username: homeassistant_user
-  password: ""
-```
-
-## Notes
-
-- Total volume is reported as `TOTAL_INCREASING`, so Home Assistant can calculate usage per hour/day/week/month using statistics.
-- All device API calls (main + pressure endpoints) use the same configurable scan interval from integration options (default: 15 seconds, minimum: 5 seconds).
-- Main data is fetched via `/trio/get/all` with fallback to individual endpoints and bounded retries for better stability.
-- The per-hour consumption sensor reports the delta from the total volume at the start of the current hour and resets to zero on the hour.
-- Pressure is stored as bar with three decimal places.
-- Temperature is `get/cel` divided by 10 (°C).
-- Battery and DC voltage are `get/bat` and `get/net` divided by 10 (V).
-- Firmware version, serial number, conductivity, WiFi RSSI, WiFi state, IP address, default gateway, and valve status are exposed as attributes on each sensor and added to the device registry.
-- UI setup creates a config entry in Home Assistant storage and **does not** auto-write `configuration.yaml`.
+1. Download or clone this repository.
+2. Copy `custom_components/hass_pontos` to your Home Assistant `custom_components` directory.
+3. Restart Home Assistant.
+4. Add the integration via Home Assistant's Integrations page and follow the configuration steps.

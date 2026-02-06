@@ -1,10 +1,4 @@
 {
-  "name": "Safetec Water",
-  "content_in_root": false,
-  "render_readme": true,
-  "domains": [
-    "safetec_water"
-  ],
-  "homeassistant": "2024.6.0",
-  "zip_release": false
-}
+    "name": "Hansgrohe Pontos",
+    "content_in_root": false
+  }
