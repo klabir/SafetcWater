@@ -14,7 +14,7 @@ HACS integration for Safetec and SYR water meters
 ### Sensors added
 - Last tapped volume (`getLTV`).
 
-### Sensors updated for statistics (state_class + numeric scaling) for SYR SafeTech+
+### Sensors updated for statistics (state_class + numeric scaling)
 - Battery voltage (`getBAT`).
 - Current water consumption (`getAVO`).
 - Water conductivity (`getCND`).

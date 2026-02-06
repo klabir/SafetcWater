@@ -82,6 +82,18 @@ class PontosSensor(CoordinatorEntity, SensorEntity):
                 }
             )
 
+        serial_endpoint = self._device_info.get("serial_number")
+        if serial_endpoint:
+            serial_value = data.get(serial_endpoint)
+            if serial_value is not None:
+                attributes["serial_number"] = serial_value
+
+        firmware_endpoint = self._device_info.get("firmware_version")
+        if firmware_endpoint:
+            firmware_value = data.get(firmware_endpoint)
+            if firmware_value is not None:
+                attributes["firmware_version"] = firmware_value
+
         return attributes if attributes else None
 
     # Parsing and updating sensor data
