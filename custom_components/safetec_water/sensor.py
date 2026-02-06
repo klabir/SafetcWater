@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -39,6 +39,10 @@ from homeassistant.util import dt as dt_util
 from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN, INTEGRATION_VERSION
 
 _LOGGER = logging.getLogger(__name__)
+
+RETRY_ATTEMPTS = 3
+RETRY_BASE_DELAY_SECONDS = 0.5
+
 
 class VolumePerHourTracker:
     """Track volume delta since the top of the current hour."""
@@ -70,6 +74,31 @@ class SafetecWaterSensorDescription(SensorEntityDescription):
     force_update: bool = False
 
 
+WIFI_STATE_MAP = {
+    "0": "Not connected",
+    "1": "Connecting",
+    "2": "Connected",
+}
+
+MAIN_KEY_MAP: dict[str, tuple[str, str]] = {
+    "volume": ("get/vol", "getVOL"),
+    "ltv": ("get/ltv", "getLTV"),
+    "avo": ("get/avo", "getAVO"),
+    "cnd": ("get/cnd", "getCND"),
+    "flo": ("get/flo", "getFLO"),
+    "temperature": ("get/cel", "getCEL"),
+    "battery": ("get/bat", "getBAT"),
+    "net": ("get/net", "getNET"),
+    "wfr": ("get/wfr", "getWFR"),
+    "wfs": ("get/wfs", "getWFS"),
+    "wip": ("get/wip", "getWIP"),
+    "wgw": ("get/wgw", "getWGW"),
+    "vlv": ("get/vlv", "getVLV"),
+    "firmware": ("get/ver", "getVER"),
+    "serial": ("get/srn", "getSRN"),
+}
+
+
 class SafetecWaterClient:
     """Client for Safetec Water API."""
 
@@ -79,13 +108,29 @@ class SafetecWaterClient:
 
     async def _async_get_json(self, path: str) -> dict[str, Any] | Any:
         url = f"{self._base_url}/{path}"
-        try:
-            async with asyncio.timeout(10):
-                async with self._session.get(url) as response:
-                    response.raise_for_status()
-                    return await response.json()
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
-            raise UpdateFailed(f"Error fetching {url}: {err}") from err
+        last_error: Exception | None = None
+        for attempt in range(1, RETRY_ATTEMPTS + 1):
+            try:
+                async with asyncio.timeout(10):
+                    async with self._session.get(url) as response:
+                        response.raise_for_status()
+                        return await response.json(content_type=None)
+            except (aiohttp.ClientError, asyncio.TimeoutError, ValueError) as err:
+                last_error = err
+                if attempt == RETRY_ATTEMPTS:
+                    break
+                wait_time = RETRY_BASE_DELAY_SECONDS * attempt
+                _LOGGER.debug(
+                    "Request failed (%s), retrying %s/%s in %.1fs: %s",
+                    url,
+                    attempt,
+                    RETRY_ATTEMPTS,
+                    wait_time,
+                    err,
+                )
+                await asyncio.sleep(wait_time)
+
+        raise UpdateFailed(f"Error fetching {url}: {last_error}") from last_error
 
     async def _async_fire_and_forget(self, path: str) -> None:
         url = f"{self._base_url}/{path}"
@@ -98,44 +143,55 @@ class SafetecWaterClient:
 
     async def async_fetch_main(self) -> dict[str, Any]:
         await self._async_fire_and_forget("set/adm/(2)f")
-        volume = _extract_value(await self._async_get_json("get/vol"), "getVOL")
-        last_tapped_volume = _extract_value(
-            await self._async_get_json("get/ltv"), "getLTV"
-        )
-        single_consumption = _extract_value(
-            await self._async_get_json("get/avo"), "getAVO"
-        )
-        conductivity = _extract_value(await self._async_get_json("get/cnd"), "getCND")
-        flow = _extract_value(await self._async_get_json("get/flo"), "getFLO")
-        temperature = _extract_value(await self._async_get_json("get/cel"), "getCEL")
-        battery = _extract_value(await self._async_get_json("get/bat"), "getBAT")
-        net = _extract_value(await self._async_get_json("get/net"), "getNET")
-        wifi_rssi = _extract_value(await self._async_get_json("get/wfr"), "getWFR")
-        ip_address = _extract_value(await self._async_get_json("get/wip"), "getWIP")
-        gateway = _extract_value(await self._async_get_json("get/wgw"), "getWGW")
-        valve_status = _extract_value(await self._async_get_json("get/vlv"), "getVLV")
-        firmware = _extract_value(await self._async_get_json("get/ver"), "getVER")
-        serial = _extract_value(await self._async_get_json("get/srn"), "getSRN")
 
+        all_payload: dict[str, Any] | Any | None = None
+        try:
+            all_payload = await self._async_get_json("get/all")
+        except UpdateFailed as err:
+            _LOGGER.debug("get/all failed, falling back to individual endpoints: %s", err)
+
+        if isinstance(all_payload, dict):
+            parsed = self._parse_main_payload(all_payload)
+            if any(parsed.get(key) is not None for key in ("volume", "temperature", "battery")):
+                return parsed
+
+        return await self._async_fetch_main_individual()
+
+    async def _async_fetch_main_individual(self) -> dict[str, Any]:
+        data: dict[str, Any] = {}
+        for logical_key, (path, api_key) in MAIN_KEY_MAP.items():
+            payload = await self._async_get_json(path)
+            data[logical_key] = _normalize_api_value(_extract_value(payload, api_key))
+        return self._coerce_main_data(data)
+
+    def _parse_main_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
+        data: dict[str, Any] = {}
+        for logical_key, (_, api_key) in MAIN_KEY_MAP.items():
+            data[logical_key] = _normalize_api_value(_extract_value(payload, api_key))
+        return self._coerce_main_data(data)
+
+    def _coerce_main_data(self, data: dict[str, Any]) -> dict[str, Any]:
         return {
-            "volume": _coerce_number(volume),
-            "ltv": _coerce_number(last_tapped_volume),
-            "avo": _coerce_number(single_consumption),
-            "cnd": _coerce_number(conductivity),
-            "flo": _coerce_number(flow),
-            "temperature": _coerce_number(temperature),
-            "battery": _coerce_number(battery),
-            "net": _coerce_number(net),
-            "wfr": _coerce_number(wifi_rssi),
-            "wip": ip_address,
-            "wgw": gateway,
-            "vlv": _coerce_number(valve_status),
-            "firmware": firmware,
-            "serial": serial,
+            "volume": _coerce_number(data.get("volume")),
+            "ltv": _coerce_number(data.get("ltv")),
+            "avo": _coerce_number(data.get("avo")),
+            "cnd": _coerce_number(data.get("cnd")),
+            "flo": _coerce_number(data.get("flo")),
+            "temperature": _coerce_number(data.get("temperature")),
+            "battery": _coerce_number(data.get("battery")),
+            "net": _coerce_number(data.get("net")),
+            "wfr": _coerce_number(data.get("wfr")),
+            "wfs": data.get("wfs"),
+            "wip": data.get("wip"),
+            "wgw": data.get("wgw"),
+            "vlv": _coerce_number(data.get("vlv")),
+            "firmware": data.get("firmware"),
+            "serial": data.get("serial"),
         }
 
     async def async_fetch_pressure(self) -> dict[str, Any]:
-        pressure = _extract_value(await self._async_get_json("get/bar"), "getBAR")
+        payload = await self._async_get_json("get/bar")
+        pressure = _normalize_api_value(_extract_value(payload, "getBAR"))
         return {"pressure": _coerce_number(pressure)}
 
 
@@ -299,6 +355,27 @@ async def _async_setup_entities(
         (
             main_coordinator,
             SafetecWaterSensorDescription(
+                key="hardness",
+                name="Safetec Water Hardness",
+                native_unit_of_measurement="°dH",
+                state_class=SensorStateClass.MEASUREMENT,
+                value_fn=_uscm_to_hardness,
+            ),
+            "cnd",
+        ),
+        (
+            main_coordinator,
+            SafetecWaterSensorDescription(
+                key="wifi_state",
+                name="Safetec Water WiFi State",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                value_fn=_wifi_state_name,
+            ),
+            "wfs",
+        ),
+        (
+            main_coordinator,
+            SafetecWaterSensorDescription(
                 key="battery",
                 name="Safetec Water Battery Voltage",
                 native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -383,6 +460,7 @@ class SafetecWaterSensor(CoordinatorEntity[DataUpdateCoordinator], SensorEntity)
             "serial_number": data.get("serial"),
             "conductivity_us_cm": data.get("cnd"),
             "wifi_rssi": data.get("wfr"),
+            "wifi_state": _wifi_state_name(data.get("wfs")),
             "ip_address": data.get("wip"),
             "default_gateway": data.get("wgw"),
             "valve_status": valve_status,
@@ -397,6 +475,14 @@ def _extract_value(data: Any, key: str) -> Any:
         if len(data) == 1:
             return next(iter(data.values()))
     return data
+
+
+def _normalize_api_value(value: Any) -> Any:
+    if isinstance(value, str):
+        upper_value = value.upper()
+        if "ERROR" in upper_value or "MIMA" in upper_value:
+            return None
+    return value
 
 
 def _coerce_number(value: Any) -> float | None:
@@ -434,6 +520,20 @@ def _tenths_to_volts(value: Any) -> float | None:
     if number is None:
         return None
     return round(number / 10, 2)
+
+
+def _uscm_to_hardness(value: Any) -> float | None:
+    number = _coerce_number(value)
+    if number is None:
+        return None
+    return round(number / 30, 2)
+
+
+def _wifi_state_name(value: Any) -> str | None:
+    if value is None:
+        return None
+    key = str(value)
+    return WIFI_STATE_MAP.get(key, key)
 
 
 def _valve_status_name(value: Any) -> str | None:

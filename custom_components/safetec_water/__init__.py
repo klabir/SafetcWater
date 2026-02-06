@@ -24,6 +24,11 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     return True
 
 
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload config entry when options are updated."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Safetec Water from a config entry."""
     host = entry.options.get(CONF_HOST, entry.data.get(CONF_HOST))
@@ -38,15 +43,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     port = hass.data[DOMAIN][entry.entry_id][CONF_PORT]
     session = aiohttp_client.async_get_clientsession(hass)
-    test_url = f"http://{host}:{port}/trio/get/vol"
+    test_url = f"http://{host}:{port}/trio/get/all"
     try:
         async with session.get(test_url, timeout=10) as response:
             response.raise_for_status()
-            await response.json()
+            await response.json(content_type=None)
     except (aiohttp.ClientError, TimeoutError, ValueError) as err:
         raise ConfigEntryNotReady(
             f"Unable to connect to Safetec Water device at {host}:{port}: {err}"
         ) from err
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
