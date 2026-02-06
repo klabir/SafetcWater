@@ -44,16 +44,6 @@ HACS integration for Safetec and SYR water meters
 
 ## Installation
 
-**Recommended:** Install via HACS
-
-### HACS
-
-1. Install [HACS](https://hacs.xyz/docs/configuration/basic/) if needed.
-2. In HACS, search for and install the "Safetec" integration.
-3. Restart Home Assistant.
-4. Add the integration via Home Assistant's Integrations page and follow the configuration steps.
-   - In the integration options you can change the IP address, port, and fetch interval.
-
 ### Manual installation
 
 1. Download or clone this repository.
@@ -61,3 +51,9 @@ HACS integration for Safetec and SYR water meters
 3. Restart Home Assistant.
 4. Add the integration via Home Assistant's Integrations page and follow the configuration steps.
    - In the integration options you can change the IP address, port, and fetch interval.
+
+## Credits
+
+This integration is based on the original hass-pontos project by sangvikh:
+https://github.com/sangvikh/hass-pontos
+
