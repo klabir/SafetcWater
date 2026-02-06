@@ -1,8 +1,4 @@
-# hass-safetec
 
-[![GitHub Release](https://img.shields.io/github/release/sangvikh/hass-safetec.svg?style=flat)](https://github.com/sangvikh/hass-safetec/releases)
-[![hassfest](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-safetec/hassfest.yaml?branch=master&label=hassfest)](https://github.com/sangvikh/hass-safetec/actions/workflows/hassfest.yaml)
-[![HACS](https://img.shields.io/github/actions/workflow/status/sangvikh/hass-safetec/validate.yaml?branch=master&label=HACS)](https://github.com/sangvikh/hass-safetec/actions/workflows/validate.yaml)
 
 HACS integration for Safetec and SYR water meters
 
@@ -18,7 +14,7 @@ HACS integration for Safetec and SYR water meters
 ### Sensors added
 - Last tapped volume (`getLTV`).
 
-### Sensors updated for statistics (state_class + numeric scaling)
+### Sensors updated for statistics (state_class + numeric scaling) for SYR SafeTech+
 - Battery voltage (`getBAT`).
 - Current water consumption (`getAVO`).
 - Water conductivity (`getCND`).
